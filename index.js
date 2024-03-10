@@ -12,9 +12,13 @@ app.use(express.json());
 
 
 
+// console.log(process.env.DB_USER);
+// console.log(process.env.DB_PASS);
+
+
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.uybqnuc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.m2pwikj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -28,9 +32,18 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        client.connect();
+        await client.connect();
         // Send a ping to confirm a successful connection
-        client.db("admin").command({ ping: 1 });
+
+        const menuCollection = client.db("bistroDb").collection("menu");
+
+        app.get('/menu', async (req, res) => {
+            const result = await menuCollection.find().toArray();
+            res.send(result);
+        })
+
+
+        await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
@@ -38,19 +51,6 @@ async function run() {
     }
 }
 run().catch(console.dir);
-
-// const dbConnect = async () => {
-//     try {
-//       client.connect()
-//       console.log('DB Connected Successfully✅')
-//     } catch (error) {
-//       console.log(error.name, error.message)
-//     }
-//   }
-//   dbConnect();
-
-
-
 
 
 
@@ -60,5 +60,5 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log(`Bistro boss is runnig on port ${port}`);
+    console.log(`Bistro boss is running on port ${port}`);
 })
