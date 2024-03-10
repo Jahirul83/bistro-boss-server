@@ -36,9 +36,14 @@ async function run() {
         // Send a ping to confirm a successful connection
 
         const menuCollection = client.db("bistroDb").collection("menu");
+        const reviewsCollection = client.db("bistroDb").collection("reviews");
 
         app.get('/menu', async (req, res) => {
             const result = await menuCollection.find().toArray();
+            res.send(result);
+        })
+        app.get('/reviews', async (req, res) => {
+            const result = await reviewsCollection.find().toArray();
             res.send(result);
         })
 
