@@ -78,6 +78,24 @@ async function run() {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
+
+        app.get('/users/admin/:email', verifyToken, async (req, res) => {
+            // console.log('Request received for email:', req.params.email);
+            const email = req.params.email;
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: 'unauthorized access' })
+            }
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            let admin = false;
+            if(user){
+                admin = user?.role === 'admin';
+            }
+            res.send({admin});
+        })
+
+
+
         app.post('/users', async (req, res) => {
             const user = req.body;
             // insert if user does not exist
