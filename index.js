@@ -45,9 +45,29 @@ async function run() {
         const reviewsCollection = client.db("bistroDb").collection("reviews");
         const cartCollection = client.db("bistroDb").collection("carts");
 
+        // jwt related api
+
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.send({ token });
+        })
+
+
+        // middleware
+        const verifyToken = (req, res, next) => {
+            console.log('inside verifyToken',req.headers);
+            if(!req.headers.authorization){
+                return res.status(401).send({message:'forbidden access'});
+            }
+            const token = req.headers.authorization.split(' ')[1];
+            // next();
+
+        }
+
         // users related api
 
-        app.get('/users', async (req, res) => {
+        app.get('/users',verifyToken, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
@@ -69,13 +89,13 @@ async function run() {
             res.send(result);
         })
 
-        app.patch('/user/admin/:id',async(req,res)=>{
+        app.patch('/user/admin/:id', async (req, res) => {
             const id = req.params.id;
-            const filter = {_id: new ObjectId(id)};
+            const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
-                $set:{role:'admin'}
+                $set: { role: 'admin' }
             }
-            const result = await userCollection.updateOne(filter,updatedDoc);
+            const result = await userCollection.updateOne(filter, updatedDoc);
             res.send(result);
         })
 
@@ -138,3 +158,10 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Bistro boss is running on port ${port}`);
 })
+
+
+/**
+ * for making access token (commands)
+ * 1. node
+ * 2. require('crypto').randomBytes(64).toString('hex')
+*/
