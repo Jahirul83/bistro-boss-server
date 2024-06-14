@@ -4,6 +4,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
@@ -184,7 +185,7 @@ async function run() {
                     image: item.image
                 }
             }
-            const result = await menuCollection.updateOne(filter,updatedDoc)
+            const result = await menuCollection.updateOne(filter, updatedDoc)
             res.send(result);
         });
 
@@ -194,7 +195,7 @@ async function run() {
         app.get('/reviews', async (req, res) => {
             const result = await reviewsCollection.find().toArray();
             res.send(result);
-        })
+        });
 
 
         // carts collection
@@ -203,19 +204,36 @@ async function run() {
             const query = { email: email };
             const result = await cartCollection.find(query).toArray();
             res.send(result);
-        })
+        });
         app.post('/carts', async (req, res) => {
             const cartItem = req.body;
             const result = await cartCollection.insertOne(cartItem);
             res.send(result);
-        })
+        });
         app.delete('/carts/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await cartCollection.deleteOne(query);
             res.send(result);
 
-        })
+        });
+
+        //payment intent
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+            console.log(amount,"amount inside the intent");
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+
+        });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
