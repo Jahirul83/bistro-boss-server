@@ -267,6 +267,29 @@ async function run() {
             });
         });
 
+        // stats or analytics
+        app.get('/admin-stats', async (req, res) => {
+            const users = await userCollection.estimatedDocumentCount();
+            const menuItems = await menuCollection.estimatedDocumentCount();
+            const orders = await paymentCollection.estimatedDocumentCount();
+
+            // this is not the best way because it will load all data and reduce it. so it is time consuming 
+            // const payments = await paymentCollection.find().toArray();
+            // const revenue = payments.reduce((total, payment) => total + payment.price, 0);
+
+            // const result = await paymentCollection.aggregate([
+            //     {
+
+            //     }
+            // ])
+            res.send({
+                users,
+                menuItems,
+                orders,
+                revenue
+            })
+        });
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
